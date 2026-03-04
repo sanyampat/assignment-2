@@ -1,123 +1,276 @@
 <!DOCTYPE html>
 <html>
- 
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Student</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .search-box { margin-top: 20px; }
-        #results { margin-top: 8px; border: 1px solid #ddd; max-width: 420px; }
-        .result-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .result-item:hover { background:#f5f5f5; }
- 
-        /* Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 480px; border-radius: 6px; }
-        .close { float: right; font-size: 20px; cursor: pointer; }
-        .field { margin-bottom: 8px; }
-    </style>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Student Management System</title>
+
+<style>
+
+body{
+    font-family: "Segoe UI", Arial, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:40px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom:25px;
+}
+
+label{
+    font-weight:600;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-top:6px;
+    margin-bottom:15px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+
+button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+.search-box input{
+    padding:12px;
+}
+
+#results{
+    margin-top:6px;
+    border-radius:6px;
+    overflow:hidden;
+}
+
+.result-item{
+    background:white;
+    padding:10px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+}
+
+.result-item:hover{
+    background:#f1f5f9;
+}
+
+/* Modal */
+
+.modal{
+    display:none;
+    position:fixed;
+    z-index:1000;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.5);
+}
+
+.modal-content{
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    width:90%;
+    max-width:400px;
+    margin:10% auto;
+    position:relative;
+}
+
+.close{
+    position:absolute;
+    right:15px;
+    top:10px;
+    font-size:20px;
+    cursor:pointer;
+}
+
+.field{
+    margin-top:10px;
+}
+
+</style>
+
 </head>
- 
+
 <body>
- 
-    <h1>Add Student</h1>
- 
-    <form action="/add_student" method="POST">
- 
-        <label>Name</label><br>
-        <input type="text" name="name" required><br><br>
- 
-        <label>Age</label><br>
-        <input type="number" name="age" required><br><br>
- 
-        <label>Course</label><br>
-        <input type="text" name="course" required><br><br>
- 
-        <label>Email</label><br>
-        <input type="email" name="email" required><br><br>
- 
-        <button type="submit">Add Student</button>
- 
-    </form>
- 
-    <div class="search-box">
-        <h2>Search Students</h2>
-        <input id="searchInput" type="search" placeholder="Type a name..." style="width:420px;padding:8px;">
-        <div id="results" role="list"></div>
-    </div>
- 
-    <!-- Modal -->
-    <div id="studentModal" class="modal">
-        <div class="modal-content">
-            <span id="closeBtn" class="close">&times;</span>
-            <h3 id="modalName">Student</h3>
-            <div class="field"><strong>Age:</strong> <span id="modalAge"></span></div>
-            <div class="field"><strong>Course:</strong> <span id="modalCourse"></span></div>
-            <div class="field"><strong>Email:</strong> <span id="modalEmail"></span></div>
-        </div>
-    </div>
-    <h2>Search Student</h2>
 
-<form action="/search" method="GET">
+<div class="container">
 
-<label>Student Name</label><br>
-<input type="text" name="name" placeholder="Enter student name">
+<h1>Student Management System</h1>
 
-<button type="submit">Search</button>
+<!-- Add Student Card -->
+
+<div class="card">
+
+<h2>Add Student</h2>
+
+<form action="/add_student" method="POST">
+
+<label>Name</label>
+<input type="text" name="name" required>
+
+<label>Age</label>
+<input type="number" name="age" required>
+
+<label>Course</label>
+<input type="text" name="course" required>
+
+<label>Email</label>
+<input type="email" name="email" required>
+
+<button type="submit">Add Student</button>
 
 </form>
 
-<br>
- 
-    <script>
-        const input = document.getElementById('searchInput');
-        const results = document.getElementById('results');
-        const modal = document.getElementById('studentModal');
-        const closeBtn = document.getElementById('closeBtn');
- 
-        let timeout = null;
- 
-        input.addEventListener('input', () => {
-            clearTimeout(timeout);
-            const q = input.value.trim();
-            if (!q) { results.innerHTML = ''; return; }
-            timeout = setTimeout(() => doSearch(q), 250);
-        });
- 
-        function doSearch(q) {
-            fetch('/search?q=' + encodeURIComponent(q))
-                .then(r => r.json())
-                .then(data => renderResults(data))
-                .catch(err => { console.error(err); results.innerHTML = '' });
-        }
- 
-        function renderResults(list) {
-            if (!list || list.length === 0) { results.innerHTML = '<div style="padding:8px;color:#666">No results</div>'; return; }
-            results.innerHTML = '';
-            list.forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'result-item';
-                div.textContent = s.name + (s.course ? ' — ' + s.course : '');
-                div.addEventListener('click', () => showModal(s));
-                results.appendChild(div);
-            });
-        }
- 
-        function showModal(s) {
-            document.getElementById('modalName').textContent = s.name || '';
-            document.getElementById('modalAge').textContent = s.age ?? '';
-            document.getElementById('modalCourse').textContent = s.course || '';
-            document.getElementById('modalEmail').textContent = s.email || '';
-            modal.style.display = 'block';
-        }
- 
-        closeBtn.addEventListener('click', () => modal.style.display = 'none');
-        window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
-    </script>
- 
+</div>
+
+
+<!-- Search Students Card -->
+
+<div class="card search-box">
+
+<h2>Search Students</h2>
+
+<input id="searchInput" type="search" placeholder="Search by student name...">
+
+<div id="results"></div>
+
+</div>
+
+</div>
+
+
+<!-- Modal -->
+
+<div id="studentModal" class="modal">
+
+<div class="modal-content">
+
+<span id="closeBtn" class="close">&times;</span>
+
+<h3 id="modalName"></h3>
+
+<div class="field"><strong>Age:</strong> <span id="modalAge"></span></div>
+<div class="field"><strong>Course:</strong> <span id="modalCourse"></span></div>
+<div class="field"><strong>Email:</strong> <span id="modalEmail"></span></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const input = document.getElementById('searchInput');
+const results = document.getElementById('results');
+const modal = document.getElementById('studentModal');
+const closeBtn = document.getElementById('closeBtn');
+
+let timeout=null;
+
+input.addEventListener('input',()=>{
+
+clearTimeout(timeout);
+
+const q=input.value.trim();
+
+if(!q){
+results.innerHTML='';
+return;
+}
+
+timeout=setTimeout(()=>doSearch(q),300);
+
+});
+
+function doSearch(q){
+
+fetch('/search?q='+encodeURIComponent(q))
+.then(r=>r.json())
+.then(data=>renderResults(data))
+.catch(err=>{
+console.error(err);
+results.innerHTML='';
+});
+
+}
+
+function renderResults(list){
+
+if(!list || list.length===0){
+results.innerHTML='<div style="padding:10px;color:#666">No results</div>';
+return;
+}
+
+results.innerHTML='';
+
+list.forEach(s=>{
+
+const div=document.createElement('div');
+
+div.className='result-item';
+
+div.textContent=s.name+" — "+(s.course || '');
+
+div.onclick=()=>showModal(s);
+
+results.appendChild(div);
+
+});
+
+}
+
+function showModal(s){
+
+document.getElementById('modalName').textContent=s.name || '';
+document.getElementById('modalAge').textContent=s.age || '';
+document.getElementById('modalCourse').textContent=s.course || '';
+document.getElementById('modalEmail').textContent=s.email || '';
+
+modal.style.display='block';
+
+}
+
+closeBtn.onclick=()=>modal.style.display='none';
+
+window.onclick=(e)=>{
+if(e.target===modal){
+modal.style.display='none';
+}
+}
+
+</script>
+
 </body>
- 
 </html>
-    
