@@ -59,7 +59,7 @@ def add_student():
     cur.close()
     conn.close()
  
-    return redirect("/students")
+    return redirect("/")
  
  
 @app.route("/students")
@@ -97,7 +97,26 @@ def search_students():
     ]
  
     return jsonify(students)
- 
+
+@app.route("/search", methods=["GET"])
+def search_student():
+
+    name = request.args.get("name")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT * FROM students WHERE name ILIKE %s",
+        ('%' + name + '%',)
+    )
+
+    students = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template("students.html", students=students)
  
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
