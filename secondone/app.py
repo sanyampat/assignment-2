@@ -12,6 +12,7 @@ def get_connection():
 
 def create_table():
 
+
     conn = get_connection()
     cur = conn.cursor()
 
