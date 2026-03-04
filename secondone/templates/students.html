@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Students</title>
+</head>
+
+<body>
+
+<h1>Students List</h1>
+
+<table border="1">
+
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Age</th>
+<th>Course</th>
+<th>Email</th>
+</tr>
+
+{% for student in students %}
+
+<tr>
+<td>{{student[0]}}</td>
+<td>{{student[1]}}</td>
+<td>{{student[2]}}</td>
+<td>{{student[3]}}</td>
+<td>{{student[4]}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/">Add Another Student</a>
+
+</body>
+
+</html>
