@@ -1,90 +1,80 @@
-from flask import Flask, request, jsonify
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-from sklearn.preprocessing import LabelEncoder
+import os
+import psycopg2
+from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 
-def preprocess_data(df, target_column, feature_columns):
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-    df = df.loc[:, ~df.columns.str.contains("Unnamed")]
+def get_connection():
+    return psycopg2.connect(DATABASE_URL)
 
-    if "ID" in df.columns:
-        df = df.drop(columns=["ID"])
 
-    X = df[feature_columns].copy()
-    y = df[target_column].copy()
+def create_table():
 
-    # Fill missing values
-    X = X.fillna(X.mode().iloc[0])
+    conn = get_connection()
+    cur = conn.cursor()
 
-    # Encode categorical features
-    for col in X.columns:
-        if X[col].dtype == "object":
-            le = LabelEncoder()
-            X[col] = le.fit_transform(X[col].astype(str))
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS students (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        age INT,
+        course TEXT,
+        email TEXT
+    )
+    """)
 
-    # Encode target
-    if y.dtype == "object":
-        le_target = LabelEncoder()
-        y = le_target.fit_transform(y.astype(str))
+    conn.commit()
+    cur.close()
+    conn.close()
 
-    return X, y
+
+create_table()
 
 
 @app.route("/")
 def home():
-    return {"message": "Naive Bayes API is running"}
+    return render_template("index.html")
 
 
-@app.route("/train", methods=["POST"])
-def train_model():
+@app.route("/add_student", methods=["POST"])
+def add_student():
 
-    try:
+    name = request.form["name"]
+    age = request.form["age"]
+    course = request.form["course"]
+    email = request.form["email"]
 
-        file = request.files["file"]
-        target_column = request.form["target"]
-        test_size = float(request.form.get("test_size", 0.2))
-        random_state = int(request.form.get("random_state", 42))
+    conn = get_connection()
+    cur = conn.cursor()
 
-        df = pd.read_csv(file)
+    cur.execute(
+        "INSERT INTO students (name, age, course, email) VALUES (%s,%s,%s,%s)",
+        (name, age, course, email),
+    )
 
-        feature_columns = [col for col in df.columns if col != target_column]
+    conn.commit()
+    cur.close()
+    conn.close()
 
-        X, y = preprocess_data(df, target_column, feature_columns)
+    return redirect("/students")
 
-        if y.nunique() > 15:
-            return jsonify({"error": "Target appears continuous. Classification required."})
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=test_size,
-            random_state=random_state
-        )
+@app.route("/students")
+def view_students():
 
-        model = GaussianNB()
-        model.fit(X_train, y_train)
+    conn = get_connection()
+    cur = conn.cursor()
 
-        y_pred = model.predict(X_test)
+    cur.execute("SELECT * FROM students")
 
-        accuracy = accuracy_score(y_test, y_pred)
-        cm = confusion_matrix(y_test, y_pred).tolist()
-        report = classification_report(y_test, y_pred, output_dict=True)
+    students = cur.fetchall()
 
-        return jsonify({
-            "accuracy": accuracy,
-            "train_samples": len(X_train),
-            "test_samples": len(X_test),
-            "confusion_matrix": cm,
-            "classification_report": report
-        })
+    cur.close()
+    conn.close()
 
-    except Exception as e:
-        return jsonify({"error": str(e)})
+    return render_template("students.html", students=students)
 
 
 if __name__ == "__main__":
